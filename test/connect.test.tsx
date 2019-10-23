@@ -50,6 +50,39 @@ class ClassCounter extends PureComponent<{
   }
 }
 
+@(connect(state => ({ count: state.count })) as any)
+class DecoratedCounter extends PureComponent<{
+  normalProp: number,
+  count?: number,
+}> {
+  state = {
+    stateCount: 0,
+  };
+
+  renderTimes = 0;
+
+  render() {
+    const { count, normalProp } = this.props;
+    const { stateCount } = this.state;
+    this.renderTimes++;
+
+    return (
+      <div>
+        <div data-testid="renderTimes">{this.renderTimes}</div>
+        <div data-testid="count">{count}</div>
+        <div data-testid="normalProp">{normalProp}</div>
+        <div data-testid="stateCount">{stateCount}</div>
+        <div data-testid="up" onClick={() => up()} />
+        <div data-testid="set" onClick={() => setHoox({ count: 10 })} />
+        <div
+          data-testid="setState"
+          onClick={() => this.setState({ stateCount: 5 })}
+        />
+      </div>
+    );
+  }
+}
+
 const ConnectedCounter = connectCount(Counter);
 const ConnectedClassCounter = connectCount(ClassCounter);
 
@@ -72,7 +105,7 @@ describe('connect function componet', () => {
   });
 });
 
-describe('connect class componet', () => {
+describe('connect class component', () => {
   test('connect success', () => {
     const Container = createContainer(ConnectedClassCounter);
     const { getByTestId } = render(<Container normalProp={12} />);
@@ -82,6 +115,25 @@ describe('connect class componet', () => {
 
   test('setState ok', () => {
     const Container = createContainer(ConnectedClassCounter);
+    const { getByTestId } = render(<Container normalProp={12} />);
+    expect(getByTestId('stateCount').innerHTML).toBe('0');
+    fireEvent.click(getByTestId('setState'));
+    expect(getByTestId('stateCount').innerHTML).toBe('5');
+    expect(getByTestId('renderTimes').innerHTML).toBe('2');
+  });
+
+});
+
+describe('connect class component with decorator', () => {
+  test('connect success', () => {
+    const Container = createContainer(DecoratedCounter);
+    const { getByTestId } = render(<Container normalProp={12} />);
+    expect(getByTestId('count').innerHTML).toBe('1');
+    expect(getByTestId('normalProp').innerHTML).toBe('12');
+  });
+
+  test('setState ok', () => {
+    const Container = createContainer(DecoratedCounter);
     const { getByTestId } = render(<Container normalProp={12} />);
     expect(getByTestId('stateCount').innerHTML).toBe('0');
     fireEvent.click(getByTestId('setState'));
